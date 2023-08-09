@@ -1,6 +1,6 @@
 require("@nomicfoundation/hardhat-toolbox");
 
-const { API_URL, PRIVATE_KEY } = process.env;
+const { API_URL, PRIVATE_KEY, ETHERSCAN_API } = process.env;
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
@@ -11,5 +11,8 @@ module.exports = {
       url: API_URL,
       accounts: [PRIVATE_KEY],
     },
+  },
+  etherscan: {
+    apiKey: ETHERSCAN_API,
   },
 };
