@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import "./App.css";
 import contract from "./contracts/NFTCollectible.json";
 import { ethers } from "ethers";
+import Header from "./components/Header";
 
+const OPENSEA_LINK = process.env.REACT_APP_OPENSEA_LINK;
 const contractAddress = process.env.REACT_APP_CONTRACT_ADDRESS;
 const abi = contract.abi;
 
@@ -94,7 +96,7 @@ function App() {
 
   return (
     <div className="main-app">
-      <h1>Scrappy Squirrels Tutorial</h1>
+      <Header opensea={OPENSEA_LINK} />
       <div>{currentAccount ? mintNftButton() : connectWalletButton()}</div>
     </div>
   );
