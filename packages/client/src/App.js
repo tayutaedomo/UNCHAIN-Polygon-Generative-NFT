@@ -5,6 +5,7 @@ import { ethers } from "ethers";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 
+const MINT_PRICE_PER_NFT = ethers.utils.parseEther("0.001");
 const OPENSEA_LINK = process.env.REACT_APP_OPENSEA_LINK;
 const contractAddress = process.env.REACT_APP_CONTRACT_ADDRESS;
 const abi = contract.abi;
@@ -13,6 +14,7 @@ function App() {
   const [currentAccount, setCurrentAccount] = useState(null);
   const [metamaskError, setMetamaskError] = useState(null);
   const [mineStatus, setMineStatus] = useState(null);
+  const [nftCount, setNftCount] = useState(1);
 
   const checkWalletIsConnected = async () => {
     const { ethereum } = window;
@@ -73,8 +75,9 @@ function App() {
         const nftContract = new ethers.Contract(contractAddress, abi, signer);
 
         console.log("Initialize payment");
-        const nftTxn = await nftContract.mintNFTs(1, {
-          value: ethers.utils.parseEther("0.01"),
+        const totalMintPrice = MINT_PRICE_PER_NFT.mul(nftCount);
+        const nftTxn = await nftContract.mintNFTs(nftCount, {
+          value: totalMintPrice,
         });
         console.log("Mining... please wait.");
         await nftTxn.wait();
@@ -114,9 +117,21 @@ function App() {
 
   const MintNftButton = () => {
     return (
-      <button onClick={mintNftHandler} className="cta-button mint-nft-button">
-        Mint NFT
-      </button>
+      <>
+        <div>
+          <label>Number of NFTs to mint: </label>
+          <input
+            type="number"
+            min="1"
+            max="3"
+            value={nftCount}
+            onChange={(e) => setNftCount(e.target.value)}
+          />
+        </div>
+        <button onClick={mintNftHandler} className="cta-button mint-nft-button">
+          Mint NFT
+        </button>
+      </>
     );
   };
 
