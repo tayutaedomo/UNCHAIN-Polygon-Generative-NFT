@@ -3,6 +3,7 @@ import "./App.css";
 import contract from "./contracts/NFTCollectible.json";
 import { ethers } from "ethers";
 import Header from "./components/Header";
+import Footer from "./components/Footer";
 
 const OPENSEA_LINK = process.env.REACT_APP_OPENSEA_LINK;
 const contractAddress = process.env.REACT_APP_CONTRACT_ADDRESS;
@@ -98,6 +99,7 @@ function App() {
     <div className="main-app">
       <Header opensea={OPENSEA_LINK} />
       <div>{currentAccount ? mintNftButton() : connectWalletButton()}</div>
+      <Footer address={contractAddress} />
     </div>
   );
 }
