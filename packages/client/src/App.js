@@ -12,6 +12,7 @@ const abi = contract.abi;
 function App() {
   const [currentAccount, setCurrentAccount] = useState(null);
   const [metamaskError, setMetamaskError] = useState(null);
+  const [mineStatus, setMineStatus] = useState(null);
 
   const checkWalletIsConnected = async () => {
     const { ethereum } = window;
@@ -37,6 +38,7 @@ function App() {
   };
 
   const connectWalletHandler = async () => {
+    console.log("Trying to connect wallet...");
     const { ethereum } = window;
     if (!ethereum) {
       alert("Please install MetaMask!");
@@ -45,7 +47,7 @@ function App() {
     try {
       const network = await ethereum.request({ method: "eth_chainId" });
 
-      if (network.toString() !== "0x13881") {
+      if (network.toString() === "0x13881") {
         const accounts = await ethereum.request({
           method: "eth_requestAccounts",
         });
@@ -62,6 +64,8 @@ function App() {
 
   const mintNftHandler = async () => {
     try {
+      setMineStatus("mining");
+
       const { ethereum } = window;
       if (ethereum) {
         const provider = new ethers.providers.Web3Provider(ethereum);
@@ -75,32 +79,16 @@ function App() {
         console.log("Mining... please wait.");
         await nftTxn.wait();
 
+        setMineStatus("success");
         console.log(`Mined, see transaction: ${nftTxn.hash}`);
       } else {
+        setMineStatus("error");
         console.log("Ethereum object doesn't exist");
       }
     } catch (error) {
+      setMineStatus("error");
       console.log(error);
     }
-  };
-
-  const connectWalletButton = () => {
-    return (
-      <button
-        onClick={connectWalletHandler}
-        className="cta-button connect-wallet-button"
-      >
-        Connect Wallet
-      </button>
-    );
-  };
-
-  const mintNftButton = () => {
-    return (
-      <button onClick={mintNftHandler} className="cta-button mint-nft-button">
-        Mint NFT
-      </button>
-    );
   };
 
   useEffect(() => {
@@ -113,6 +101,76 @@ function App() {
     }
   }, []);
 
+  const ConnectWalletButton = () => {
+    return (
+      <button
+        onClick={connectWalletHandler}
+        className="cta-button connect-wallet-button"
+      >
+        Connect Wallet
+      </button>
+    );
+  };
+
+  const MintNftButton = () => {
+    return (
+      <button onClick={mintNftHandler} className="cta-button mint-nft-button">
+        Mint NFT
+      </button>
+    );
+  };
+
+  const MineStatusSuccess = () => {
+    return (
+      <div className="success">
+        <p>NFT minting successfully!</p>
+        <p className="success-link">
+          <a
+            href={`https://testnets.opensea.io/${currentAccount}`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Click here
+          </a>
+          &nbsp;
+          <span>to view your NFT on OpenSea.</span>
+        </p>
+      </div>
+    );
+  };
+
+  const MineStatusMining = () => {
+    return (
+      <div className="mining">
+        <div className="loader" />
+        <span>Transaction is mining</span>
+      </div>
+    );
+  };
+
+  const MineStatusError = () => {
+    return (
+      <div className="error">
+        <p>
+          Transaction failed. Make sure you have at least 0.001 MATIC in your
+          MetaMak wallet and try again.
+        </p>
+      </div>
+    );
+  };
+
+  const MainActions = ({ mineStatus, currentAccount }) => {
+    return (
+      <div className="mine-submission">
+        {mineStatus === "success" && (
+          <MineStatusSuccess account={currentAccount} />
+        )}
+        {mineStatus === "mining" && <MineStatusMining />}
+        {mineStatus === "error" && <MineStatusError />}
+      </div>
+    );
+  };
+
   return (
     <div className="main-app">
       {metamaskError && (
@@ -121,9 +179,31 @@ function App() {
         </div>
       )}
       <Header opensea={OPENSEA_LINK} />
-      {metamaskError === false ? (
-        <div>{currentAccount ? mintNftButton() : connectWalletButton()}</div>
-      ) : null}
+
+      {metamaskError === true ? (
+        !currentAccount && !mineStatus && <ConnectWalletButton />
+      ) : (
+        <>
+          {currentAccount && mineStatus !== "mining" && <MintNftButton />}
+          <MainActions
+            mineStatus={mineStatus}
+            currentAccount={currentAccount}
+          />
+          {currentAccount && (
+            <div className="show-user-address">
+              <p>
+                Your address being connected: <br />
+                <span>
+                  <a className="user-address" target="_blank" rel="noreferrer">
+                    {currentAccount}
+                  </a>
+                </span>
+              </p>
+            </div>
+          )}
+        </>
+      )}
+
       <Footer address={contractAddress} />
     </div>
   );
