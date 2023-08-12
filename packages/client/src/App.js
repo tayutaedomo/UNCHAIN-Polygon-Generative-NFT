@@ -11,6 +11,7 @@ const abi = contract.abi;
 
 function App() {
   const [currentAccount, setCurrentAccount] = useState(null);
+  const [metamaskError, setMetamaskError] = useState(null);
 
   const checkWalletIsConnected = async () => {
     const { ethereum } = window;
@@ -22,11 +23,15 @@ function App() {
     }
 
     const accounts = await ethereum.request({ method: "eth_accounts" });
-    if (accounts.length !== 0) {
+    const network = await ethereum.request({ method: "eth_chainId" });
+
+    if (accounts.length !== 0 && network.toString() === "0x13881") {
       const account = accounts[0];
       console.log("Found an authorized account:", account);
+      setMetamaskError(false);
       setCurrentAccount(account);
     } else {
+      setMetamaskError(true);
       console.log("No authorized account found");
     }
   };
@@ -38,11 +43,18 @@ function App() {
     }
 
     try {
-      const accounts = await ethereum.request({
-        method: "eth_requestAccounts",
-      });
-      console.log("Found an account! Address:", accounts[0]);
-      setCurrentAccount(accounts[0]);
+      const network = await ethereum.request({ method: "eth_chainId" });
+
+      if (network.toString() !== "0x13881") {
+        const accounts = await ethereum.request({
+          method: "eth_requestAccounts",
+        });
+        console.log("Found an account! Address:", accounts[0]);
+        setMetamaskError(false);
+        setCurrentAccount(accounts[0]);
+      } else {
+        setMetamaskError(true);
+      }
     } catch (error) {
       console.log(error);
     }
@@ -93,12 +105,25 @@ function App() {
 
   useEffect(() => {
     checkWalletIsConnected();
+
+    if (window.ethereum) {
+      window.ethereum.on("chainChanged", (_chainId) =>
+        window.location.reload()
+      );
+    }
   }, []);
 
   return (
     <div className="main-app">
+      {metamaskError && (
+        <div className="metamask-error">
+          Metamask から Polygon Testnet に接続してください!
+        </div>
+      )}
       <Header opensea={OPENSEA_LINK} />
-      <div>{currentAccount ? mintNftButton() : connectWalletButton()}</div>
+      {metamaskError === false ? (
+        <div>{currentAccount ? mintNftButton() : connectWalletButton()}</div>
+      ) : null}
       <Footer address={contractAddress} />
     </div>
   );
